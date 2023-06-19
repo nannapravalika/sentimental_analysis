@@ -1,5 +1,6 @@
 from django.shortcuts import render
 import twitter
+import nltk
 from django.http import JsonResponse
 from nltk.sentiment import SentimentIntensityAnalyzer
 
@@ -24,3 +25,5 @@ def analyze_sentiment(request):
         sentiment_score = sia.polarity_scores(text)
         return JsonResponse({'text': text, 'sentiment_score': sentiment_score})
     return JsonResponse({'message': 'Invalid request.'}, status=400)
+
+nltk.download()
