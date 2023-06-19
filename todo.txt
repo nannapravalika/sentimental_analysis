@@ -53,3 +53,64 @@ Once you've implemented the view and URL mapping, you can access the Twitter API
 Note: The example above uses the `python-twitter` library, but you can also use other Python libraries like `Tweepy` or make direct HTTP requests using Django's `requests` library to interact with the Twitter API.
 
 Ensure that you handle exceptions properly, authenticate your requests, and comply with Twitter's API usage guidelines and rate limits when using the Twitter API.
+
+
+
+Certainly! Here's an example of how you can integrate the Twitter API and sentiment analysis API into your Django project:
+
+1. Install the required libraries:
+```shell
+pip install python-twitter nltk
+```
+
+2. Import the necessary modules and initialize the Twitter API client and sentiment analyzer in your views.py file:
+
+```python
+import twitter
+from django.http import JsonResponse
+from nltk.sentiment import SentimentIntensityAnalyzer
+
+api = twitter.Api(consumer_key='YOUR_CONSUMER_KEY',
+                  consumer_secret='YOUR_CONSUMER_SECRET',
+                  access_token_key='YOUR_ACCESS_TOKEN_KEY',
+                  access_token_secret='YOUR_ACCESS_TOKEN_SECRET')
+
+sia = SentimentIntensityAnalyzer()
+
+def fetch_tweets(request, username):
+    try:
+        tweets = api.GetUserTimeline(screen_name=username, count=10)
+        tweet_data = [{'text': tweet.text, 'created_at': tweet.created_at} for tweet in tweets]
+        return JsonResponse(tweet_data, safe=False)
+    except twitter.error.TwitterError as e:
+        return JsonResponse({'message': str(e)}, status=400)
+
+def analyze_sentiment(request):
+    if request.method == 'POST':
+        text = request.POST.get('text', '')
+        sentiment_score = sia.polarity_scores(text)
+        return JsonResponse({'text': text, 'sentiment_score': sentiment_score})
+    return JsonResponse({'message': 'Invalid request.'}, status=400)
+```
+
+Make sure to replace `'YOUR_CONSUMER_KEY'`, `'YOUR_CONSUMER_SECRET'`, `'YOUR_ACCESS_TOKEN_KEY'`, and `'YOUR_ACCESS_TOKEN_SECRET'` with your actual Twitter API credentials.
+
+3. Define the URL mappings in your urls.py file:
+
+```python
+from django.urls import path
+from .views import fetch_tweets, analyze_sentiment
+
+urlpatterns = [
+    path('tweets/<str:username>/', fetch_tweets, name='fetch_tweets'),
+    path('sentiment-analysis/', analyze_sentiment, name='analyze_sentiment'),
+]
+```
+
+4. Test the APIs:
+- To fetch tweets from a Twitter user, make a GET request to `/tweets/<username>/`, where `<username>` is the Twitter username of the user.
+- To perform sentiment analysis on a text, make a POST request to `/sentiment-analysis/` with a JSON payload containing the text to analyze.
+
+Note: In this example, I have combined the Twitter API and sentiment analysis into a single Django app. You can separate them into separate Django apps if you prefer a more modular structure.
+
+Remember to handle exceptions properly, authenticate your requests, and comply with Twitter's API usage guidelines and rate limits when using the Twitter API. Additionally, you may need to preprocess the tweets or perform more advanced sentiment analysis techniques depending on your specific requirements.
